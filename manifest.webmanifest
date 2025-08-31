@@ -1,8 +1,8 @@
 {
     "name": "PeleNovela-Prompt-Generator",
     "short_name": "PeleNovela",
-    "start_url": "./",
-    "scope": "./",
+    "start_url": "/Pele-novela/",
+    "scope": "/Pele-novela/",
     "display": "standalone",
     "background_color": "#0b1324",
     "theme_color": "#0e7490",
