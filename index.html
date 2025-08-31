@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>PeleNovela-Prompt-Generator</title>
+  
+  <!-- PWA / iOS install hints -->
+  <meta name="theme-color" content="#0e7490" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="PeleNovela" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <!-- Optional icons (place these files in /icons). iOS uses apple-touch-icon specifically. -->
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" href="icons/icon-192.png" type="image/png" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .tw-input { transition: box-shadow 0.2s ease, background-color 0.2s ease; }
+    .tw-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.5), 0 0 8px rgba(6, 182, 212, 0.4); background-color: #4b5563; }
+    .tw-input:hover { background-color: #52525b; }
+    .tw-btn { transition: box-shadow 0.2s ease, transform 0.1s ease, background 0.3s ease; }
+    .tw-btn:hover { box-shadow: 0 0 8px rgba(6, 182, 212, 0.4); transform: translateY(-1px); }
+    .tw-btn:active { transform: translateY(0); box-shadow: 0 0 4px rgba(6, 182, 212, 0.3); }
+    .tw-btn-primary { background: linear-gradient(90deg, #06b6d4 0%, #0891b2 100%); }
+    .tw-btn-primary:hover { background: linear-gradient(90deg, #0891b2 0%, #0e7490 100%); }
+    @keyframes shake { 10%,90%{transform:translateX(-1px);} 20%,80%{transform:translateX(2px);} 30%,50%,70%{transform:translateX(-4px);} 40%,60%{transform:translateX(4px);} }
+    .shake { animation: shake 0.35s ease both; }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
+  <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-2xl">
+    <!-- Header -->
+    <header class="text-center mb-4">
+      <h1 id="app-title" class="text-3xl sm:text-4xl font-bold text-cyan-400">PeleNovela-Prompt-Generator</h1>
+      <p id="app-tagline" class="text-gray-400 mt-2">Ihr einfacher Weg zum perfekten KI-Bild-Prompt</p>
+    </header>
+
+    <!-- Top bar: Language & Theme Toggle -->
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center gap-2">
+        <label for="lang-select" class="text-sm text-gray-300 select-none" id="lang-label">Sprache</label>
+        <select id="lang-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg p-1.5">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+          <option value="es">Español</option>
+          <option value="fr">Français</option>
+          <option value="it">Italiano</option>
+          <option value="ro">Română</option>
+        </select>
+      </div>
+      <label class="flex items-center gap-2 text-sm text-gray-300 cursor-pointer select-none">
+        <span id="theme-label">Licht aus / an</span>
+        <input id="theme-toggle" type="checkbox" class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-cyan-500" checked />
+      </label>
+    </div>
+
+    <!-- Prompt Builder Form -->
+    <main id="prompt-builder" class="bg-gray-800 rounded-xl shadow-lg p-6 space-y-6">
+      <!-- 1. Hauptmotiv -->
+      <div>
+        <label for="subject" id="label-subject" class="block mb-2 text-sm font-medium text-cyan-300">1. Hauptmotiv (Was?) <span class="text-red-400">*</span></label>
+        <input id="subject" type="text" autocomplete="off" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400" placeholder="Geben Sie Ihr Hauptmotiv ein…" />
+        <p id="subject-error" class="mt-1 text-sm text-red-400 hidden">Bitte ein Hauptmotiv angeben.</p>
+        <div id="subject-preview" class="mt-2 text-sm text-gray-300 bg-gray-600/50 p-2 rounded-md min-h-[2.5rem] italic">&nbsp;</div>
+        <div id="subject-examples" class="mt-2"></div>
+      </div>
+
+      <!-- 2. Ort / Hintergrund -->
+      <div>
+        <label for="setting" id="label-setting" class="block mb-2 text-sm font-medium text-cyan-300">2. Ort / Hintergrund (Wo?)</label>
+        <input id="setting" type="text" autocomplete="off" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400" placeholder="Beschreiben Sie die Szenerie…" />
+        <div id="setting-preview" class="mt-2 text-sm text-gray-300 bg-gray-600/50 p-2 rounded-md min-h-[2.5rem] italic">&nbsp;</div>
+        <div id="setting-examples" class="mt-2"></div>
+      </div>
+
+      <!-- 3. Kunststil -->
+      <div>
+        <label for="style-select" id="label-style" class="block mb-2 text-sm font-medium text-cyan-300">3. Kunststil</label>
+        <select id="style-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="style-other" type="text" placeholder="Eigener Kunststil…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- 4. Perspektive -->
+      <div>
+        <label for="perspective-select" id="label-perspective" class="block mb-2 text-sm font-medium text-cyan-300">4. Kamera‑Perspektive</label>
+        <select id="perspective-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="perspective-other" type="text" placeholder="Eigene Perspektive…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- 5. Beleuchtung -->
+      <div>
+        <label for="lighting-select" id="label-lighting" class="block mb-2 text-sm font-medium text-cyan-300">5. Beleuchtung</label>
+        <select id="lighting-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="lighting-other" type="text" placeholder="Eigene Beleuchtung…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- 6. Details & Qualität -->
+      <div>
+        <label for="details-select" id="label-details" class="block mb-2 text-sm font-medium text-cyan-300">6. Details & Qualität</label>
+        <select id="details-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="details-other" type="text" placeholder="Eigene Details…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- 7. Kamera-Setup -->
+      <div>
+        <label for="camera-select" id="label-camera" class="block mb-2 text-sm font-medium text-cyan-300">7. Kamera‑Setup</label>
+        <select id="camera-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="camera-other" type="text" placeholder="Eigenes Kamera‑Setup…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- 8. Seitenverhältnis -->
+      <div>
+        <label for="ratio-select" id="label-ratio" class="block mb-2 text-sm font-medium text-cyan-300">8. Seitenverhältnis (Ratio)</label>
+        <select id="ratio-select" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+        <input id="ratio-other" type="text" placeholder="Eigenes Seitenverhältnis…" class="tw-input bg-gray-700 border border-gray-600 text-white text-sm rounded-lg focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 mt-2 hidden" />
+      </div>
+
+      <!-- Optionen -->
+      <div class="flex items-center justify-between pt-2">
+        <label class="flex items-center gap-2 text-sm text-gray-300 select-none">
+          <input id="pretty-format" type="checkbox" class="h-4 w-4 rounded border-gray-500 bg-gray-700 text-cyan-500" checked />
+          <span id="label-pretty">Schön formatiert (mehrzeilig)</span>
+        </label>
+        <span class="text-xs text-gray-400" id="label-required-note">* Pflichtfeld</span>
+      </div>
+
+      <!-- Generate Button -->
+      <div class="pt-2">
+        <button id="generate-btn" class="tw-btn tw-btn-primary w-full text-white font-medium rounded-lg text-sm px-5 py-2.5 text-center disabled:opacity-50 disabled:cursor-not-allowed">Prompt generieren</button>
+      </div>
+    </main>
+
+    <!-- Result Section -->
+    <section id="result-section" class="mt-8 hidden">
+      <h2 id="result-title" class="text-xl font-semibold text-center mb-4">Ihr fertiger Prompt</h2>
+      <div class="mb-4">
+        <label id="live-label" class="block mb-2 text-sm text-gray-300">Live-Vorschau</label>
+        <pre id="live-preview" class="tw-input bg-gray-700 border border-gray-600 rounded-md p-3 whitespace-pre-wrap min-h-[3.5rem]"></pre>
+      </div>
+      <div class="bg-gray-800 rounded-xl shadow-lg p-4">
+        <textarea id="result-prompt" readonly class="tw-input w-full h-36 p-3 bg-gray-700 border border-gray-600 rounded-md text-gray-100 resize-none"></textarea>
+        <div class="flex flex-wrap gap-2 mt-3">
+          <button id="copy-btn" class="tw-btn bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded-lg">In die Zwischenablage kopieren</button>
+          <button id="export-btn" class="tw-btn bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded-lg">Als .txt exportieren</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- History Section -->
+    <section id="history-section" class="mt-6 hidden">
+      <h3 id="history-title" class="text-lg font-semibold mb-3">Zuletzt generierte Prompts</h3>
+      <div id="history-list" class="space-y-2"></div>
+      <div class="flex gap-2 mt-3">
+        <button id="history-clear" class="tw-btn bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-2 rounded-lg">Verlauf löschen</button>
+        <button id="export-history" class="tw-btn bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-2 rounded-lg">Verlauf als .txt exportieren</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ===== i18n data (DE/EN/ES/FR/IT/RO) =====
+    const I18N = {
+      de: { title:'PeleNovela-Prompt-Generator', tagline:'Ihr einfacher Weg zum perfekten KI-Bild-Prompt', language:'Sprache', theme:'Licht aus / an',
+        labels:{ subject:'1. Hauptmotiv (Was?)', setting:'2. Ort / Hintergrund (Wo?)', style:'3. Kunststil', perspective:'4. Kamera‑Perspektive', lighting:'5. Beleuchtung', details:'6. Details & Qualität', camera:'7. Kamera‑Setup', ratio:'8. Seitenverhältnis (Ratio)' },
+        placeholders:{ subject:'Geben Sie Ihr Hauptmotiv ein…', setting:'Beschreiben Sie die Szenerie…', styleOther:'Eigener Kunststil…', perspectiveOther:'Eigene Perspektive…', lightingOther:'Eigene Beleuchtung…', detailsOther:'Eigene Details…', cameraOther:'Eigenes Kamera‑Setup…', ratioOther:'Eigenes Seitenverhältnis…' },
+        resultTitle:'Ihr fertiger Prompt', liveLabel:'Live‑Vorschau', pretty:'Schön formatiert (mehrzeilig)', requiredNote:'* Pflichtfeld', generate:'Prompt generieren', copy:'In die Zwischenablage kopieren', copied:'Kopiert!', export:'Als .txt exportieren', historyTitle:'Zuletzt generierte Prompts', historyClear:'Verlauf löschen', historyExport:'Verlauf als .txt exportieren', subjectError:'Bitte ein Hauptmotiv angeben.',
+        examplesSubject:['Ein Astronaut','Eine leuchtende Blume','Ein altes Haus'], examplesSetting:['auf dem Mars','in einem verwunschenen Wald','an einem tropischen Strand'],
+        selects:{ placeholder:'-- Bitte wählen --', other:'Andere…', style:['Fotorealistisch','Ölgemälde','Aquarell','3D Render','Anime‑Stil','Cyberpunk','Steampunk','Vintage Foto','Bleistiftzeichnung'], perspective:["Eye‑Level Shot (Augenhöhe)","Low‑Angle Shot (Froschperspektive)","High‑Angle Shot (Vogelperspektive)","Bird's‑Eye View (Aufsicht)","Close‑up Shot (Nahaufnahme)","Extreme Close‑up (Detailaufnahme)","Long Shot (Totale)","Dutch Angle (Gekippte Perspektive)","Point of View (POV)"], lighting:['Filmische Beleuchtung','Sanftes Licht','Dramatisches Licht','Sonnenuntergang','Goldene Stunde','Neonlicht','Studiobeleuchtung','Gegenlicht'], details:['Hochdetailliert','Ultra‑realistisch','8K','4K','Scharfer Fokus','Kinematisch'], camera:['DSLR Kamera','Teleobjektiv','Weitwinkelobjektiv','Makroobjektiv','GoPro‑Look','Polaroid‑Foto','Kodak Portra Film‑Look'], ratio:['16:9','4:3','1:1 (Quadrat)','9:16 (Hochformat)'] },
+        prettyLabels:{ subject:'Motiv', setting:'Ort', style:'Stil', perspective:'Perspektive', lighting:'Beleuchtung', details:'Details', camera:'Kamera', ratio:'Seitenverhältnis' }
+      },
+      en: { title:'PeleNovela Prompt Generator', tagline:'Your simple path to the perfect AI image prompt', language:'Language', theme:'Dark / Light',
+        labels:{ subject:'1. Main Subject (What?)', setting:'2. Setting / Background (Where?)', style:'3. Art Style', perspective:'4. Camera Perspective', lighting:'5. Lighting', details:'6. Details & Quality', camera:'7. Camera Setup', ratio:'8. Aspect Ratio' },
+        placeholders:{ subject:'Enter your main subject…', setting:'Describe the scene…', styleOther:'Custom art style…', perspectiveOther:'Custom perspective…', lightingOther:'Custom lighting…', detailsOther:'Custom details…', cameraOther:'Custom camera setup…', ratioOther:'Custom aspect ratio…' },
+        resultTitle:'Your Final Prompt', liveLabel:'Live Preview', pretty:'Nicely formatted (multi‑line)', requiredNote:'* Required', generate:'Generate Prompt', copy:'Copy to clipboard', copied:'Copied!', export:'Export as .txt', historyTitle:'Recently Generated Prompts', historyClear:'Clear history', historyExport:'Export history (.txt)', subjectError:'Please enter a main subject.',
+        examplesSubject:['An astronaut','A glowing flower','An old house'], examplesSetting:['on Mars','in an enchanted forest','at a tropical beach'],
+        selects:{ placeholder:'-- Please choose --', other:'Other…', style:['Photorealistic','Oil painting','Watercolor','3D render','Anime style','Cyberpunk','Steampunk','Vintage photo','Pencil drawing'], perspective:['Eye‑level shot','Low‑angle shot','High‑angle shot','Bird’s‑eye view','Close‑up','Extreme close‑up','Long shot','Dutch angle','Point of view (POV)'], lighting:['Cinematic lighting','Soft light','Dramatic light','Sunset','Golden hour','Neon light','Studio lighting','Backlight'], details:['Highly detailed','Ultra‑realistic','8K','4K','Sharp focus','Cinematic'], camera:['DSLR camera','Telephoto lens','Wide‑angle lens','Macro lens','GoPro look','Polaroid photo','Kodak Portra film look'], ratio:['16:9','4:3','1:1 (Square)','9:16 (Portrait)'] },
+        prettyLabels:{ subject:'Subject', setting:'Setting', style:'Style', perspective:'Perspective', lighting:'Lighting', details:'Details', camera:'Camera', ratio:'Aspect Ratio' }
+      },
+      es: { title:'Generador de Prompts PeleNovela', tagline:'Tu forma sencilla de crear el prompt perfecto', language:'Idioma', theme:'Oscuro / Claro',
+        labels:{ subject:'1. Tema principal (¿Qué?)', setting:'2. Escenario / Fondo (¿Dónde?)', style:'3. Estilo artístico', perspective:'4. Perspectiva de cámara', lighting:'5. Iluminación', details:'6. Detalles y calidad', camera:'7. Configuración de cámara', ratio:'8. Relación de aspecto' },
+        placeholders:{ subject:'Escribe el tema principal…', setting:'Describe la escena…', styleOther:'Estilo artístico personalizado…', perspectiveOther:'Perspectiva personalizada…', lightingOther:'Iluminación personalizada…', detailsOther:'Detalles personalizados…', cameraOther:'Configuración de cámara personalizada…', ratioOther:'Relación de aspecto personalizada…' },
+        resultTitle:'Tu prompt final', liveLabel:'Vista previa en vivo', pretty:'Formato bonito (varias líneas)', requiredNote:'* Obligatorio', generate:'Generar prompt', copy:'Copiar al portapapeles', copied:'¡Copiado!', export:'Exportar como .txt', historyTitle:'Prompts generados recientemente', historyClear:'Borrar historial', historyExport:'Exportar historial (.txt)', subjectError:'Por favor escribe un tema principal.',
+        examplesSubject:['Un astronauta','Una flor luminosa','Una casa antigua'], examplesSetting:['en Marte','en un bosque encantado','en una playa tropical'],
+        selects:{ placeholder:'-- Elige una opción --', other:'Otro…', style:['Fotorrealista','Óleo','Acuarela','Render 3D','Estilo anime','Cyberpunk','Steampunk','Foto vintage','Dibujo a lápiz'], perspective:['Plano a la altura de los ojos','Plano nadir (bajo)','Plano picado (alto)','Vista de pájaro','Primer plano','Primerísimo primer plano','Plano general','Ángulo holandés','Punto de vista (POV)'], lighting:['Iluminación cinematográfica','Luz suave','Luz dramática','Atardecer','Hora dorada','Luz de neón','Iluminación de estudio','Contraluz'], details:['Muy detallado','Ultra‑realista','8K','4K','Enfoque nítido','Cinemático'], camera:['Cámara DSLR','Teleobjetivo','Gran angular','Lente macro','Estética GoPro','Foto Polaroid','Estilo Kodak Portra'], ratio:['16:9','4:3','1:1 (Cuadrado)','9:16 (Vertical)'] },
+        prettyLabels:{ subject:'Tema', setting:'Escenario', style:'Estilo', perspective:'Perspectiva', lighting:'Iluminación', details:'Detalles', camera:'Cámara', ratio:'Relación de aspecto' }
+      },
+      fr: { title:'Générateur de Prompts PeleNovela', tagline:"Votre chemin simple vers le prompt d'image IA parfait", language:'Langue', theme:'Sombre / Clair',
+        labels:{ subject:'1. Sujet principal (Quoi ?)', setting:"2. Décor / Arrière‑plan (Où ?)", style:'3. Style artistique', perspective:'4. Perspective de caméra', lighting:'5. Éclairage', details:'6. Détails & qualité', camera:'7. Configuration caméra', ratio:"8. Format d’image (Ratio)" },
+        placeholders:{ subject:'Saisissez le sujet principal…', setting:'Décrivez la scène…', styleOther:'Style artistique personnalisé…', perspectiveOther:'Perspective personnalisée…', lightingOther:'Éclairage personnalisé…', detailsOther:'Détails personnalisés…', cameraOther:'Configuration caméra personnalisée…', ratioOther:"Format d’image personnalisé…" },
+        resultTitle:'Votre prompt final', liveLabel:'Aperçu en direct', pretty:'Joli format (multi‑ligne)', requiredNote:'* Obligatoire', generate:'Générer le prompt', copy:'Copier dans le presse‑papiers', copied:'Copié !', export:'Exporter en .txt', historyTitle:'Prompts générés récemment', historyClear:"Effacer l’historique", historyExport:"Exporter l’historique (.txt)", subjectError:'Veuillez saisir un sujet principal.',
+        examplesSubject:['Un astronaute','Une fleur lumineuse','Une vieille maison'], examplesSetting:['sur Mars','dans une forêt enchantée','sur une plage tropicale'],
+        selects:{ placeholder:'-- Veuillez choisir --', other:'Autre…', style:['Photoréaliste','Peinture à l’huile','Aquarelle','Rendu 3D','Style anime','Cyberpunk','Steampunk','Photo vintage','Dessin au crayon'], perspective:["Plan à hauteur des yeux","Contre‑plongée","Plongée","Vue du dessus","Gros plan","Très gros plan","Plan large","Angle hollandais","Point de vue (POV)"], lighting:['Éclairage cinématographique','Lumière douce','Lumière dramatique','Coucher de soleil','Heure dorée','Néon','Éclairage studio','Contre‑jour'], details:['Très détaillé','Ultra‑réaliste','8K','4K','Mise au point nette','Cinématographique'], camera:['Appareil DSLR','Téléobjectif','Grand‑angle','Objectif macro','Aspect GoPro','Photo Polaroid','Look Kodak Portra'], ratio:['16:9','4:3','1:1 (Carré)','9:16 (Portrait)'] },
+        prettyLabels:{ subject:'Sujet', setting:'Décor', style:'Style', perspective:'Perspective', lighting:'Éclairage', details:'Détails', camera:'Caméra', ratio:"Format d’image" }
+      },
+      it: { title:'Generatore di Prompt PeleNovela', tagline:'La via semplice al prompt perfetto per immagini IA', language:'Lingua', theme:'Scuro / Chiaro',
+        labels:{ subject:'1. Soggetto principale (Cosa?)', setting:'2. Ambientazione / Sfondo (Dove?)', style:'3. Stile artistico', perspective:'4. Prospettiva della fotocamera', lighting:'5. Illuminazione', details:'6. Dettagli & qualità', camera:'7. Configurazione fotocamera', ratio:'8. Formato (Aspect Ratio)' },
+        placeholders:{ subject:'Inserisci il soggetto principale…', setting:'Descrivi la scena…', styleOther:'Stile artistico personalizzato…', perspectiveOther:'Prospettiva personalizzata…', lightingOther:'Illuminazione personalizzata…', detailsOther:'Dettagli personalizzati…', cameraOther:'Configurazione fotocamera personalizzata…', ratioOther:'Formato personalizzato…' },
+        resultTitle:'Il tuo prompt finale', liveLabel:'Anteprima in tempo reale', pretty:'Ben formattato (multi‑linea)', requiredNote:'* Obbligatorio', generate:'Genera prompt', copy:'Copia negli appunti', copied:'Copiato!', export:'Esporta come .txt', historyTitle:'Prompt generati di recente', historyClear:'Cancella cronologia', historyExport:'Esporta cronologia (.txt)', subjectError:'Per favore inserisci un soggetto principale.',
+        examplesSubject:['Un astronauta','Un fiore luminoso','Una casa antica'], examplesSetting:['su Marte','in una foresta incantata','su una spiaggia tropicale'],
+        selects:{ placeholder:'-- Scegli --', other:'Altro…', style:['Fotorrealistico','Olio su tela','Acquerello','Render 3D','Stile anime','Cyberpunk','Steampunk','Foto vintage','Disegno a matita'], perspective:['A livello degli occhi','Dal basso (controplongée)','Dall’alto (plongée)','Vista dall’alto','Primo piano','Primissimo piano','Campo lungo','Inclinazione olandese','Punto di vista (POV)'], lighting:['Illuminazione cinematografica','Luce soffusa','Luce drammatica','Tramonto','Ora d’oro','Neon','Illuminazione da studio','Controluce'], details:['Altamente dettagliato','Ultra‑realistico','8K','4K','Messa a fuoco nitida','Cinematografico'], camera:['Fotocamera DSLR','Teleobiettivo','Grandangolo','Obiettivo macro','Look GoPro','Foto Polaroid','Look Kodak Portra'], ratio:['16:9','4:3','1:1 (Quadrato)','9:16 (Verticale)'] },
+        prettyLabels:{ subject:'Soggetto', setting:'Ambientazione', style:'Stile', perspective:'Prospettiva', lighting:'Illuminazione', details:'Dettagli', camera:'Fotocamera', ratio:'Formato' }
+      },
+      ro: { title:'Generator de Prompturi PeleNovela', tagline:'Drumul simplu către promptul perfect pentru imagini AI', language:'Limbă', theme:'Întunecat / Luminos',
+        labels:{ subject:'1. Subiect principal (Ce?)', setting:'2. Decor / Fundal (Unde?)', style:'3. Stil artistic', perspective:'4. Perspectivă cameră', lighting:'5. Iluminare', details:'6. Detalii & calitate', camera:'7. Setare cameră', ratio:'8. Raport de aspect' },
+        placeholders:{ subject:'Introdu subiectul principal…', setting:'Descrie scena…', styleOther:'Stil artistic personalizat…', perspectiveOther:'Perspectivă personalizată…', lightingOther:'Iluminare personalizată…', detailsOther:'Detalii personalizate…', cameraOther:'Setare cameră personalizată…', ratioOther:'Raport de aspect personalizat…' },
+        resultTitle:'Promptul tău final', liveLabel:'Previzualizare live', pretty:'Formatat frumos (pe rânduri)', requiredNote:'* Obligatoriu', generate:'Generează promptul', copy:'Copiază în clipboard', copied:'Copiat!', export:'Exportă ca .txt', historyTitle:'Prompturi generate recent', historyClear:'Șterge istoricul', historyExport:'Exportă istoricul (.txt)', subjectError:'Te rog introdu un subiect principal.',
+        examplesSubject:['Un astronaut','O floare strălucitoare','O casă veche'], examplesSetting:['pe Marte','într-o pădure fermecată','pe o plajă tropicală'],
+        selects:{ placeholder:'-- Alege --', other:'Altul…', style:['Fotorealist','Pictură în ulei','Acuarelă','Randare 3D','Stil anime','Cyberpunk','Steampunk','Fotografie vintage','Desen în creion'], perspective:['La nivelul ochilor','Unghi de jos','Unghi de sus','Vedere de sus','Prim-plan','Prim‑plan extrem','Plan general','Unghi olandez','Punct de vedere (POV)'], lighting:['Iluminare cinematică','Lumină moale','Lumină dramatică','Apus','Ora de aur','Neon','Iluminare de studio','Contralumină'], details:['Foarte detaliat','Ultra‑realist','8K','4K','Focalizare clară','Cinematic'], camera:['Cameră DSLR','Teleobiectiv','Obiectiv cu unghi larg','Obiectiv macro','Aspect GoPro','Fotografie Polaroid','Look Kodak Portra'], ratio:['16:9','4:3','1:1 (Pătrat)','9:16 (Portret)'] },
+        prettyLabels:{ subject:'Subiect', setting:'Decor', style:'Stil', perspective:'Perspectivă', lighting:'Iluminare', details:'Detalii', camera:'Cameră', ratio:'Raport' }
+      }
+    };
+
+    // ===== Theme (Dark/Light) =====
+    const themeToggle = document.getElementById('theme-toggle');
+    function applyTheme(dark){
+      document.body.classList.toggle('bg-gray-900', dark);
+      document.body.classList.toggle('text-gray-100', dark);
+      document.body.classList.toggle('bg-white', !dark);
+      document.body.classList.toggle('text-gray-900', !dark);
+    }
+
+    // ===== Helpers =====
+    function el(id){ return document.getElementById(id); }
+    function makeOption(value, text){ const o=document.createElement('option'); o.value=value; o.textContent=text; return o; }
+    function populateSelect(selectId, items, placeholderText){
+      const s = el(selectId); s.innerHTML = '';
+      s.appendChild(makeOption('', placeholderText));
+      items.forEach(t=> s.appendChild(makeOption(t, t)));
+      s.appendChild(makeOption('other', currentLang.selects.other));
+    }
+    function renderExamples(containerId, items){
+      const c = el(containerId); c.innerHTML = '';
+      items.forEach(txt=>{
+        const span = document.createElement('span');
+        span.className = 'example-tag inline-block bg-gray-600 text-gray-200 text-xs font-medium mr-2 mb-2 px-2.5 py-1 rounded-full cursor-pointer hover:bg-gray-500 transition-colors';
+        span.textContent = txt; c.appendChild(span);
+      });
+    }
+
+    // ===== Language switching =====
+    const langSelect = el('lang-select');
+    let currentLang = I18N.de;
+    function applyLanguage(code){
+      const L = I18N[code] || I18N.de; currentLang = L; localStorage.setItem('pn_lang', code);
+      document.documentElement.lang = code;
+      document.title = L.title;
+      el('app-title').textContent = L.title;
+      el('app-tagline').textContent = L.tagline;
+      el('lang-label').textContent = L.language;
+      el('theme-label').textContent = L.theme;
+      el('label-subject').innerHTML = `${L.labels.subject} <span class="text-red-400">*</span>`;
+      el('label-setting').textContent = L.labels.setting;
+      el('label-style').textContent = L.labels.style;
+      el('label-perspective').textContent = L.labels.perspective;
+      el('label-lighting').textContent = L.labels.lighting;
+      el('label-details').textContent = L.labels.details;
+      el('label-camera').textContent = L.labels.camera;
+      el('label-ratio').textContent = L.labels.ratio;
+      el('subject').placeholder = L.placeholders.subject;
+      el('setting').placeholder = L.placeholders.setting;
+      el('style-other').placeholder = L.placeholders.styleOther;
+      el('perspective-other').placeholder = L.placeholders.perspectiveOther;
+      el('lighting-other').placeholder = L.placeholders.lightingOther;
+      el('details-other').placeholder = L.placeholders.detailsOther;
+      el('camera-other').placeholder = L.placeholders.cameraOther;
+      el('ratio-other').placeholder = L.placeholders.ratioOther;
+      el('result-title').textContent = L.resultTitle;
+      el('live-label').textContent = L.liveLabel;
+      el('label-pretty').textContent = L.pretty;
+      el('label-required-note').textContent = L.requiredNote;
+      el('generate-btn').textContent = L.generate;
+      el('copy-btn').textContent = L.copy;
+      el('export-btn').textContent = L.export;
+      el('history-title').textContent = L.historyTitle;
+      el('history-clear').textContent = L.historyClear;
+      el('export-history').textContent = L.historyExport;
+      el('subject-error').textContent = L.subjectError;
+      renderExamples('subject-examples', L.examplesSubject);
+      renderExamples('setting-examples', L.examplesSetting);
+      populateSelect('style-select', L.selects.style, L.selects.placeholder);
+      populateSelect('perspective-select', L.selects.perspective, L.selects.placeholder);
+      populateSelect('lighting-select', L.selects.lighting, L.selects.placeholder);
+      populateSelect('details-select', L.selects.details, L.selects.placeholder);
+      populateSelect('camera-select', L.selects.camera, L.selects.placeholder);
+      populateSelect('ratio-select', L.selects.ratio, L.selects.placeholder);
+      updateLive();
+    }
+    langSelect.addEventListener('change', ()=> applyLanguage(langSelect.value));
+
+    // ===== Show 'Other' inputs =====
+    function setupOtherField(selectId, otherId) {
+      const sel = document.getElementById(selectId);
+      const other = document.getElementById(otherId);
+      if (!sel || !other) return;
+      sel.addEventListener('change', () => {
+        if (sel.value === 'other') { other.classList.remove('hidden'); other.focus(); }
+        else { other.classList.add('hidden'); other.value = ''; updateLive(); }
+      });
+    }
+
+    // ===== Field live preview (subject/setting) =====
+    function setupLivePreview(inputId, previewId) {
+      const input = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+      if (input && preview) {
+        input.addEventListener('input', () => {
+          preview.innerHTML = input.value.trim() === '' ? '&nbsp;' : input.value;
+        });
+      }
+    }
+
+    // ===== Validation =====
+    const generateBtn = document.getElementById('generate-btn');
+    const subject = document.getElementById('subject');
+    const subjectError = document.getElementById('subject-error');
+    function validate() {
+      const ok = subject.value.trim().length > 0;
+      if (!ok) {
+        subject.classList.add('border-red-500','focus:ring-red-500','focus:border-red-500');
+        subjectError.classList.remove('hidden');
+        generateBtn.setAttribute('disabled','');
+      } else {
+        subject.classList.remove('border-red-500','focus:ring-red-500','focus:border-red-500');
+        subjectError.classList.add('hidden');
+        generateBtn.removeAttribute('disabled');
+      }
+      return ok;
+    }
+
+    // ===== Prompt generation & Live build =====
+    const resultSection = document.getElementById('result-section');
+    const resultPrompt = document.getElementById('result-prompt');
+    const prettyToggle = document.getElementById('pretty-format');
+    const livePreview = document.getElementById('live-preview');
+
+    function getInputValue(baseId){
+      const sel = document.getElementById(baseId+'-select');
+      if(sel){
+        if(sel.value==='other'){
+          const other=document.getElementById(baseId+'-other');
+          return other?other.value.trim():'';
+        }
+        return sel.value.trim();
+      }
+      const field=document.getElementById(baseId);
+      return field?field.value.trim():'';
+    }
+    function collectValues(){
+      return { subject:getInputValue('subject'), setting:getInputValue('setting'), style:getInputValue('style'), perspective:getInputValue('perspective'), lighting:getInputValue('lighting'), details:getInputValue('details'), camera:getInputValue('camera'), ratio:getInputValue('ratio') };
+    }
+    function formatPretty(values){
+      const L = currentLang.prettyLabels; const order=['subject','setting','style','perspective','lighting','details','camera','ratio']; const lines=[];
+      for (const key of order){ const v = values[key]; if (v) lines.push(`${L[key]}: ${v}`); }
+      return lines.join('\n');
+    }
+    function buildOutput(pretty, values){ const parts = Object.values(values).filter(Boolean); return pretty ? formatPretty(values) : parts.join(', '); }
+    function updateLive(){ const values = collectValues(); const output = buildOutput(prettyToggle.checked, values); livePreview.textContent = output || ''; }
+
+    ;['subject','setting','style-select','style-other','perspective-select','perspective-other','lighting-select','lighting-other','details-select','details-other','camera-select','camera-other','ratio-select','ratio-other'].forEach(id=>{
+      const el = document.getElementById(id); if (el){ el.addEventListener('input', updateLive); el.addEventListener('change', updateLive); }
+    });
+    prettyToggle.addEventListener('change', updateLive);
+
+    document.getElementById('copy-btn').addEventListener('click', () => {
+      const text = resultPrompt.value || livePreview.textContent || ''; if (!text) return;
+      const code = localStorage.getItem('pn_lang') || 'de';
+      const L = I18N[code];
+      navigator.clipboard.writeText(text).then(()=>{
+        document.getElementById('copy-btn').textContent = L.copied;
+        setTimeout(()=> document.getElementById('copy-btn').textContent = L.copy, 1500);
+      }).catch(()=>{ resultPrompt.select(); document.execCommand('copy'); });
+    });
+
+    // ===== History & Export =====
+    const historySection = document.getElementById('history-section');
+    const historyList = document.getElementById('history-list');
+    const historyClear = document.getElementById('history-clear');
+    const exportHistoryBtn = document.getElementById('export-history');
+    const exportBtn = document.getElementById('export-btn');
+    function loadHistory(){ try { return JSON.parse(localStorage.getItem('pn_history')||'[]'); } catch { return []; } }
+    function saveHistory(list){ localStorage.setItem('pn_history', JSON.stringify(list.slice(0,50))); }
+    function renderHistory(){ const items = loadHistory(); historyList.innerHTML = ''; if (!items.length){ historySection.classList.add('hidden'); return; } historySection.classList.remove('hidden'); items.forEach((text)=>{ const row = document.createElement('div'); row.className='border border-gray-700 rounded-lg p-3 flex items-start gap-2 bg-gray-800'; const pre=document.createElement('pre'); pre.className='flex-1 whitespace-pre-wrap text-sm text-gray-200'; pre.textContent=text; const actions=document.createElement('div'); actions.className='flex flex-col gap-2'; const useBtn=document.createElement('button'); useBtn.className='tw-btn bg-cyan-700 hover:bg-cyan-600 text-white text-xs px-3 py-1 rounded-md'; useBtn.textContent={de:'Übernehmen', en:'Use', es:'Usar', fr:'Utiliser', it:'Usa', ro:'Folosește'}[localStorage.getItem('pn_lang')||'de']; useBtn.addEventListener('click', ()=>{ resultPrompt.value=text; resultSection.classList.remove('hidden'); resultSection.scrollIntoView({behavior:'smooth'}); }); const copyBtn2=document.createElement('button'); copyBtn2.className='tw-btn bg-gray-700 hover:bg-gray-600 text-white text-xs px-3 py-1 rounded-md'; copyBtn2.textContent={de:'Kopieren', en:'Copy', es:'Copiar', fr:'Copier', it:'Copia', ro:'Copiază'}[localStorage.getItem('pn_lang')||'de']; copyBtn2.addEventListener('click', ()=>{ navigator.clipboard.writeText(text).catch(()=>{}); }); actions.appendChild(useBtn); actions.appendChild(copyBtn2); row.appendChild(pre); row.appendChild(actions); historyList.appendChild(row); }); }
+    function addToHistory(text){ if (!text) return; const items = loadHistory(); if (items[0] !== text){ items.unshift(text); } saveHistory(items); renderHistory(); }
+    historyClear.addEventListener('click', ()=>{ saveHistory([]); renderHistory(); });
+    exportHistoryBtn.addEventListener('click', ()=>{ const items = loadHistory(); const blob = new Blob([items.join('\n\n---\n\n')], {type:'text/plain'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='pele_novela_prompt_history.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
+    exportBtn.addEventListener('click', ()=>{ const text = resultPrompt.value || livePreview.textContent || ''; if (!text) return; const blob=new Blob([text], {type:'text/plain'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='pele_novela_prompt.txt'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url); });
+
+    // ===== Theme persistence =====
+    const savedTheme = localStorage.getItem('pn_theme'); if (savedTheme){ themeToggle.checked = savedTheme === 'dark'; }
+    applyTheme(themeToggle.checked);
+    themeToggle.addEventListener('change', ()=>{ applyTheme(themeToggle.checked); localStorage.setItem('pn_theme', themeToggle.checked ? 'dark' : 'light'); });
+
+    // ===== Setup dependent wiring =====
+    setupLivePreview('subject','subject-preview');
+    setupLivePreview('setting','setting-preview');
+    setupOtherField('style-select','style-other');
+    setupOtherField('perspective-select','perspective-other');
+    setupOtherField('lighting-select','lighting-other');
+    setupOtherField('details-select','details-other');
+    setupOtherField('camera-select','camera-other');
+    setupOtherField('ratio-select','ratio-other');
+
+    // ===== Initial language =====
+    const savedLang = localStorage.getItem('pn_lang') || 'de';
+    langSelect.value = savedLang;
+    applyLanguage(savedLang);
+    validate();
+    renderHistory();
+  </script>
+
+  <!-- Register Service Worker for PWA install & offline -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .catch((err) => console.warn('SW registration failed:', err));
+      });
+    }
+  </script>
+
+  <!-- =====================
+       PWA FILES TO ADD NEXT TO index.html
+       1) manifest.webmanifest
+       2) sw.js
+
+       Create both files in the same folder as this HTML.
+       ===================== -->
+  <!-- manifest.webmanifest -->
+  <!--
+  {
+    "name": "PeleNovela-Prompt-Generator",
+    "short_name": "PeleNovela",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#0b1324",
+    "theme_color": "#0e7490",
+    "icons": [
+      { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+      { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+      { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    ]
+  }
+  -->
+
+  <!-- sw.js (create as separate file sw.js) -->
+<!--
+const CACHE_NAME = 'pele-novela-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  'https://cdn.tailwindcss.com'
+];
