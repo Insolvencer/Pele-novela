@@ -2361,49 +2361,6 @@ Jetzt verhalten sie sich wie klassische Textfelder und deine ursprüngliche Stru
 Du:
 Bitte!! wieder den vorherigen code mit scroll felder, so wie wir ihn zu github hochgeladen haben.
 ChatGPT:
-Kreativ-assistent (tailwind Cdn) – Fixed Inputs
-· html
-      <section id="result-section" class="hidden mt-4">
-        <h2 class="text-xl mb-2">Ihr fertiger Prompt</h2>
-        <textarea id="result-prompt" readonly class="w-full h-32 p-2 bg-gray-700 border border-gray-600 rounded"></textarea>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    function getValue(id){
-      return document.getElementById(id).value.trim();
-    }
-
-    const generateBtn = document.getElementById('generate-btn');
-    const resultSection = document.getElementById('result-section');
-    const resultPrompt = document.getElementById('result-prompt');
-
-    generateBtn.addEventListener('click', () => {
-      const parts = [
-        getValue('subject'),
-        getValue('setting'),
-        getValue('style'),
-        getValue('perspective'),
-        getValue('lighting'),
-        getValue('details'),
-        getValue('camera'),
-        getValue('ratio')
-      ].filter(Boolean);
-
-      if(parts.length){
-        resultPrompt.value = parts.join(', ');
-        resultSection.classList.remove('hidden');
-        resultSection.scrollIntoView({behavior:'smooth'});
-      } else {
-        resultPrompt.value = '';
-        resultSection.classList.add('hidden');
-      }
-    });
-  </script>
-</body>
-</html>
-
 Jetzt ist wieder der ursprüngliche Code mit Scrollfeldern (Textareas) drin – genauso wie du ihn nach GitHub hochgeladen hattest. ✅
 
 Alle Eingabefelder haben wieder ihre mehrzeiligen Textbereiche (mit Scrollmöglichkeit).
@@ -2897,7 +2854,125 @@ Dein Paste war am Ende abgeschnitten (offener Kommentar). Das kann die Seite bre
 
 Wenn du später wieder die mehrsprachige/PWA-Version möchtest, sag Bescheid – ich mergen sie dir gern ohne die Scrollfelder anzutasten.
 
+Du:
+habe ich durchgeführt. Weisse Buchstaben auf weissen Hintergrund
+ChatGPT:
 
+Nachgedacht für 22s
+Kreativ-assistent (tailwind Cdn) – Fixed Inputs
+· html
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PeleNovela-Prompt-Generator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Force consistent colors for inputs & textareas (iOS/Safari safe) */
+    textarea, input[type="text"], input, select {
+      color: #f3f4f6 !important;           /* text-gray-100 */
+      background-color: #374151 !important;/* bg-gray-700 */
+      caret-color: #ffffff;                /* visible caret */
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    ::placeholder{ color:#9ca3af !important; } /* placeholder-gray-400 */
+    /* Prevent WebKit autofill from flipping background/text */
+    input:-webkit-autofill, textarea:-webkit-autofill, select:-webkit-autofill {
+      -webkit-text-fill-color:#ffffff !important;
+      transition: background-color 9999s ease-in-out 0s;
+      box-shadow: 0 0 0px 1000px #374151 inset;
+      -webkit-box-shadow: 0 0 0px 1000px #374151 inset;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+  <div class="container mx-auto p-4 max-w-2xl">
+    <header class="text-center mb-6">
+      <h1 class="text-3xl font-bold text-cyan-400">PeleNovela-Prompt-Generator</h1>
+      <p class="text-gray-400">Erstellen Sie Ihren perfekten Prompt</p>
+    </header>
+
+    <main class="bg-gray-800 p-6 rounded-lg space-y-4">
+      <div>
+        <label class="block text-sm mb-1" for="subject">1. Hauptmotiv</label>
+        <textarea id="subject" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Was?"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="setting">2. Ort</label>
+        <textarea id="setting" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Wo?"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="style">3. Kunststil</label>
+        <textarea id="style" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Stil"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="perspective">4. Perspektive</label>
+        <textarea id="perspective" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Perspektive"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="lighting">5. Beleuchtung</label>
+        <textarea id="lighting" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Beleuchtung"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="details">6. Details & Qualität</label>
+        <textarea id="details" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Details"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="camera">7. Kamera</label>
+        <textarea id="camera" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="Kamera"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm mb-1" for="ratio">8. Seitenverhältnis</label>
+        <textarea id="ratio" class="w-full p-2 rounded bg-gray-700 border border-gray-600 text-white placeholder-gray-400 h-20" placeholder="z.B. 16:9"></textarea>
+      </div>
+
+      <button type="button" id="generate-btn" class="w-full bg-cyan-600 hover:bg-cyan-700 p-2 rounded text-white">Prompt generieren</button>
+
+      <section id="result-section" class="hidden mt-4">
+        <h2 class="text-xl mb-2">Ihr fertiger Prompt</h2>
+        <textarea id="result-prompt" readonly class="w-full h-32 p-2 bg-gray-700 border border-gray-600 rounded text-white placeholder-gray-400""></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function getValue(id){
+      return document.getElementById(id).value.trim();
+    }
+
+    const generateBtn = document.getElementById('generate-btn');
+    const resultSection = document.getElementById('result-section');
+    const resultPrompt = document.getElementById('result-prompt');
+
+    generateBtn.addEventListener('click', () => {
+      const parts = [
+Danke fürs schnelle Feedback — ich hab’s direkt gefixt. ✅
+
+Ich habe in deiner Datei jetzt:
+
+Eine kleine CSS-Schutzschicht eingebaut (im <head>):
+
+Erzwingt für textarea/input/select weiße Schrift auf dunklem Hintergrund.
+
+Fix für iOS/Safari Autofill (WebKit setzt sonst manchmal Weiß auf Weiß).
+
+Sichtbarer Caret (Eingabecursor).
+
+Allen Textareas explizit text-white + placeholder-gray-400 gegeben.
+
+Damit solltest du nicht mehr “weiße Buchstaben auf weißem Hintergrund” sehen – auch nicht auf dem iPad/iPhone.
+
+Was du jetzt machen kannst
+Seite neu laden (am besten Hard-Reload).
+
+Wenn du die App als PWA installiert hast: einmal vom Homescreen löschen, in Safari öffnen → neu hinzufügen, damit die neuen Styles garantiert greifen.
+
+Wenn’s bei dir noch irgendwo weiß auf weiß bleibt, sag mir genau welches Feld (z. B. „Perspektive“) und welcher Browser/Modus (Safari, iPad Homescreen-App), dann patch’ ich’s gezielt weiter.
+
+
+hau
 
 
 Keine ausgewähltKeine ausgewählt
