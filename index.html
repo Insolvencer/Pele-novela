@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PN-Prompt-Assistent</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      transition: background-color 5000s ease-in-out 0s;
+      -webkit-box-shadow: 0 0 0 30px #374151 inset !important;
+      -webkit-text-fill-color: #ffffff !important;
+    }
+    .chip { display:inline-block; padding:.25rem .6rem; border-radius:9999px; font-size:.75rem; cursor:pointer }
+  </style>
+</head>
+<body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-white min-h-screen">
+  <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-3xl">
+
+    <!-- Topbar -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-bold text-cyan-700 dark:text-cyan-400">PN-Prompt-Assistent</h1>
+        <p id="subtitle" class="text-gray-600 dark:text-gray-400 mt-1">Ihr einfacher Weg zum perfekten KI-Bild-Prompt</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <label for="lang-select" class="sr-only">Sprache</label>
+        <select id="lang-select"
+          class="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 p-2
+                 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+          <option value="de">Deutsch</option><option value="en">English</option>
+          <option value="fr">Français</option><option value="es">Español</option>
+          <option value="it">Italiano</option><option value="ro">Română</option>
+        </select>
+        <button id="theme-toggle"
+          class="inline-flex items-center gap-2 text-sm px-3 py-2 rounded-lg border border-gray-300 bg-gray-100 hover:bg-gray-200 text-gray-800
+                 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200" title="Light/Dark">
+          <span id="theme-label">Dunkel</span>
+          <svg id="theme-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13.02A9 9 0 1 1 11 2.36a7 7 0 1 0 10.64 10.66z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Builder -->
+      <main id="prompt-builder" class="md:col-span-2 bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6 space-y-6">
+
+        <!-- 1. Hauptmotiv -->
+        <div>
+          <label for="subject" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelSubject">1. Hauptmotiv (Was?)</label>
+          <input id="subject" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5
+                   placeholder-gray-400 dark:placeholder-gray-300"
+            placeholder="z. B.: Ein Astronaut, eine Blume, ein altes Haus…" data-i18n-ph="phSubject">
+          <p id="subject-hint" class="text-xs text-red-500 mt-1 hidden" data-i18n="hintSubject">Bitte ein Hauptmotiv angeben.</p>
+        </div>
+
+        <!-- 1a. Aktion -->
+        <div>
+          <label for="action" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelAction">1a. Aktion (Wie?)</label>
+          <input id="action" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5
+                   placeholder-gray-400 dark:placeholder-gray-300"
+            placeholder="z. B.: läuft, fällt, zerbricht…" data-i18n-ph="phAction">
+        </div>
+
+        <!-- 2. Ort / Hintergrund -->
+        <div>
+          <label for="setting" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelSetting">2. Ort / Hintergrund (Wo?)</label>
+          <input id="setting" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5
+                   placeholder-gray-400 dark:placeholder-gray-300"
+            placeholder="Beschreiben Sie die Szenerie..." data-i18n-ph="phSetting">
+          <div id="setting-examples" class="mt-2">
+            <!-- Beispiel-Chips (nur für Setting) werden i18n-gesteuert gerendert -->
+          </div>
+        </div>
+
+        <!-- 3. Stil -->
+        <div>
+          <label for="style-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelStyle">3. Kunststil</label>
+          <select id="style-select"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+          <input id="style-other" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 dark:placeholder-gray-300 mt-2 hidden"
+            placeholder="Eigener Kunststil..." data-i18n-ph="phStyleOther">
+        </div>
+
+        <!-- 4. Perspektive -->
+        <div>
+          <label for="perspective-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelPerspective">4. Kamera-Perspektive</label>
+          <select id="perspective-select"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+          <input id="perspective-other" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 dark:placeholder-gray-300 mt-2 hidden"
+            placeholder="Eigene Perspektive..." data-i18n-ph="phPerspectiveOther">
+        </div>
+
+        <!-- 5. Beleuchtung -->
+        <div>
+          <label for="lighting-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelLighting">5. Beleuchtung</label>
+          <select id="lighting-select"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+          <input id="lighting-other" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 dark:placeholder-gray-300 mt-2 hidden"
+            placeholder="Eigene Beleuchtung..." data-i18n-ph="phLightingOther">
+        </div>
+
+        <!-- 6. Details -->
+        <div>
+          <label for="details-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelDetails">6. Details & Qualität</label>
+          <select id="details-select"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+          <input id="details-other" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 dark:placeholder-gray-300 mt-2 hidden"
+            placeholder="Eigene Details..." data-i18n-ph="phDetailsOther">
+        </div>
+
+        <!-- 7. Kamera -->
+        <div>
+          <label for="camera-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelCamera">7. Kamera-Setup</label>
+          <select id="camera-select"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5"></select>
+          <input id="camera-other" type="text"
+            class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 block w-full p-2.5 placeholder-gray-400 dark:placeholder-gray-300 mt-2 hidden"
+            placeholder="Eigenes Kamera-Setup..." data-i18n-ph="phCameraOther">
+        </div>
+
+        <!-- 8. Seitenverhältnis -->
+        <div>
+          <label for="ratio-select" class="block mb-2 text-sm font-medium text-cyan-700 dark:text-cyan-300" data-i18n="labelRatio">8. Seitenverhältnis</label>
+          <div class="flex gap-2">
+            <select id="ratio-select"
+              class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 p-2.5 w-40"></select>
+            <input id="ratio-custom" type="text"
+              class="hidden bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-cyan-500 focus:border-cyan-500 p-2.5 flex-1"
+              placeholder="z. B. 21:9" data-i18n-ph="phRatioCustom">
+          </div>
+        </div>
+
+        <!-- Optionen + Actions -->
+        <div class="flex items-center gap-3 pt-2">
+          <input id="pretty-toggle" type="checkbox"
+            class="w-4 h-4 text-cyan-600 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-cyan-500 focus:ring-2">
+          <label for="pretty-toggle" class="text-sm text-gray-700 dark:text-gray-300 select-none" data-i18n="labelPretty">Als schönen Satz formulieren</label>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 pt-2">
+          <button id="generate-btn"
+            class="text-white font-medium rounded-lg text-sm px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 focus:ring-4 focus:outline-none focus:ring-cyan-800"
+            data-i18n="genBtn">Prompt generieren</button>
+          <button id="export-btn"
+            class="text-gray-900 bg-gray-200 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 border border-gray-300
+                   dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+            data-i18n="exportBtn">Als Text exportieren</button>
+          <button id="export-json-btn"
+            class="text-gray-900 bg-gray-200 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 border border-gray-300
+                   dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+            data-i18n="exportJsonBtn">Als JSON exportieren</button>
+          <button id="export-md-btn"
+            class="text-gray-900 bg-gray-200 hover:bg-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 border border-gray-300
+                   dark:text-white dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600"
+            data-i18n="exportMdBtn">Als Markdown exportieren</button>
+        </div>
+
+        <!-- Result -->
+        <section id="result-section" class="mt-4 hidden">
+          <h2 class="text-lg font-semibold mb-2" data-i18n="resultTitle">Ihr fertiger Prompt</h2>
+          <div class="bg-white dark:bg-gray-700 rounded-xl shadow p-4">
+            <textarea id="result-prompt" readonly
+              class="w-full h-28 p-2 bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md text-gray-800 dark:text-gray-100 resize-none"></textarea>
+            <button id="copy-btn"
+              class="mt-3 text-white font-medium rounded-lg text-sm px-5 py-2.5 bg-gray-600 hover:bg-gray-700 focus:ring-4 focus:outline-none focus:ring-gray-800"
+              data-i18n="copyBtn">In die Zwischenablage kopieren</button>
+          </div>
+        </section>
+      </main>
+
+      <!-- History -->
+      <aside class="md:col-span-1">
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-cyan-700 dark:text-cyan-300" data-i18n="historyTitle">Verlauf</h2>
+            <button id="clear-history"
+              class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 bg-gray-100 hover:bg-gray-200
+                     dark:border-gray-700 dark:text-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+              title="Alle Einträge löschen"><span data-i18n="historyClear">Alles löschen</span></button>
+          </div>
+          <div id="history-list" class="space-y-3"></div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    /* ========================= I18N ========================= */
+    const I18N = {
+      de:{subtitle:"Ihr einfacher Weg zum perfekten KI-Bild-Prompt",labelSubject:"1. Hauptmotiv (Was?)",
+          phSubject:"z. B.: Ein Astronaut, eine Blume, ein altes Haus…",
+          labelAction:"1a. Aktion (Wie?)", phAction:"z. B.: läuft, fällt, zerbricht…",
+          hintSubject:"Bitte ein Hauptmotiv angeben.",labelSetting:"2. Ort / Hintergrund (Wo?)",phSetting:"Beschreiben Sie die Szenerie...",
+          labelStyle:"3. Kunststil",labelPerspective:"4. Kamera-Perspektive",labelLighting:"5. Beleuchtung",labelDetails:"6. Details & Qualität",
+          labelCamera:"7. Kamera-Setup",labelRatio:"8. Seitenverhältnis",optChoose:"-- wählen --",optOther:"Andere...",optCustom:"Eigene…",
+          phStyleOther:"Eigener Kunststil...",phPerspectiveOther:"Eigene Perspektive...",phLightingOther:"Eigene Beleuchtung...",phDetailsOther:"Eigene Details...",phCameraOther:"Eigenes Kamera-Setup...",phRatioCustom:"z. B. 21:9",
+          labelPretty:"Als schönen Satz formulieren",resultTitle:"Ihr fertiger Prompt",historyTitle:"Verlauf",historyClear:"Alles löschen",
+          copyOk:"Kopiert!",copyBtn:"In die Zwischenablage kopieren",exportOk:"Export erstellt",exportBtn:"Als Text exportieren",exportJsonBtn:"Als JSON exportieren",exportMdBtn:"Als Markdown exportieren",jsonOk:"JSON erstellt",mdOk:"Markdown erstellt",genBtn:"Prompt generieren",themeLight:"Hell",themeDark:"Dunkel",
+          examplesSetting:["auf dem Mars","in einem verwunschenen Wald","an einem tropischen Strand"]},
+      en:{subtitle:"Your simple path to the perfect AI image prompt",labelSubject:"1. Main subject (What?)",
+          phSubject:"e.g., An astronaut, a flower, an old house…",
+          labelAction:"1a. Action (How?)", phAction:"e.g., runs, falls, breaks…",
+          hintSubject:"Please enter a main subject.",labelSetting:"2. Location / Background (Where?)",phSetting:"Describe the scenery...",
+          labelStyle:"3. Art style",labelPerspective:"4. Camera perspective",labelLighting:"5. Lighting",labelDetails:"6. Details & Quality",
+          labelCamera:"7. Camera setup",labelRatio:"8. Aspect ratio",optChoose:"-- choose --",optOther:"Other...",optCustom:"Custom…",
+          phStyleOther:"Custom art style...",phPerspectiveOther:"Custom perspective...",phLightingOther:"Custom lighting...",phDetailsOther:"Custom details...",phCameraOther:"Custom camera setup...",phRatioCustom:"e.g., 21:9",
+          labelPretty:"Format as a nice sentence",resultTitle:"Your final prompt",historyTitle:"History",historyClear:"Clear all",
+          copyOk:"Copied!",copyBtn:"Copy to clipboard",exportOk:"Exported",exportBtn:"Export as text",exportJsonBtn:"Export as JSON",exportMdBtn:"Export as Markdown",jsonOk:"JSON exported",mdOk:"Markdown exported",genBtn:"Generate prompt",themeLight:"Light",themeDark:"Dark",
+          examplesSetting:["on Mars","in an enchanted forest","on a tropical beach"]},
+      fr:{subtitle:"Votre chemin simple vers l’invite d’image IA parfaite",labelSubject:"1. Sujet principal (Quoi ?)",
+          phSubject:"p. ex. : Un astronaute, une fleur, une vieille maison…",
+          labelAction:"1a. Mouvement / Action (Comment ?)", phAction:"p. ex. : court, tombe, se brise…",
+          hintSubject:"Veuillez saisir un sujet principal.",labelSetting:"2. Lieu / Arrière-plan (Où ?)",phSetting:"Décrivez la scène…",
+          labelStyle:"3. Style artistique",labelPerspective:"4. Perspective de caméra",labelLighting:"5. Éclairage",labelDetails:"6. Détails & Qualité",
+          labelCamera:"7. Configuration caméra",labelRatio:"8. Format d’image",optChoose:"-- choisir --",optOther:"Autre...",optCustom:"Personnalisé…",
+          phStyleOther:"Style artistique perso…",phPerspectiveOther:"Perspective perso…",phLightingOther:"Éclairage perso…",phDetailsOther:"Détails perso…",phCameraOther:"Configuration perso…",phRatioCustom:"ex. 21:9",
+          labelPretty:"Formuler en belle phrase",resultTitle:"Votre invite finale",historyTitle:"Historique",historyClear:"Tout effacer",
+          copyOk:"Copié !",copyBtn:"Copier",exportOk:"Export créé",exportJsonBtn:"Exporter en JSON",exportMdBtn:"Exporter en Markdown",jsonOk:"JSON créé",mdOk:"Markdown créé",genBtn:"Générer l’invite",themeLight:"Clair",themeDark:"Sombre",
+          examplesSetting:["sur Mars","dans une forêt enchantée","sur une plage tropicale"]},
+      es:{subtitle:"Tu camino sencillo hacia el prompt perfecto de imagen IA",labelSubject:"1. Tema principal (¿Qué?)",
+          phSubject:"p. ej.: Un astronauta, una flor, una casa antigua…",
+          labelAction:"1a. Movimiento / Acción (¿Cómo?)", phAction:"p. ej.: corre, cae, se rompe…",
+          hintSubject:"Introduce un tema principal.",labelSetting:"2. Lugar / Fondo (¿Dónde?)",phSetting:"Describe la escena…",
+          labelStyle:"3. Estilo artístico",labelPerspective:"4. Perspectiva de cámara",labelLighting:"5. Iluminación",labelDetails:"6. Detalles y calidad",
+          labelCamera:"7. Configuración de cámara",labelRatio:"8. Relación de aspecto",optChoose:"-- elegir --",optOther:"Otro...",optCustom:"Personalizado…",
+          phStyleOther:"Estilo personalizado…",phPerspectiveOther:"Perspectiva personalizada…",phLightingOther:"Iluminación personalizada…",phDetailsOther:"Detalles personalizados…",phCameraOther:"Configuración personalizada…",phRatioCustom:"p. ej., 21:9",
+          labelPretty:"Formatear como frase",resultTitle:"Tu prompt final",historyTitle:"Historial",historyClear:"Borrar todo",
+          copyOk:"¡Copiado!",copyBtn:"Copiar",exportOk:"Exportado",exportBtn:"Exportar como texto",exportJsonBtn:"Exportar como JSON",exportMdBtn:"Exportar como Markdown",jsonOk:"JSON exportado",mdOk:"Markdown exportado",genBtn:"Generar prompt",themeLight:"Claro",themeDark:"Oscuro",
+          examplesSetting:["en Marte","en un bosque encantado","en una playa tropical"]},
+      it:{subtitle:"La via semplice al prompt perfetto per immagini IA",labelSubject:"1. Soggetto principale (Cosa?)",
+          phSubject:"es.: Un astronauta, un fiore, una casa antica…",
+          labelAction:"1a. Movimento / Azione (Come?)", phAction:"es.: corre, cade, si rompe…",
+          hintSubject:"Inserisci un soggetto principale.",labelSetting:"2. Luogo / Sfondo (Dove?)",phSetting:"Descrivi la scena…",
+          labelStyle:"3. Stile artistico",labelPerspective:"4. Prospettiva della camera",labelLighting:"5. Illuminazione",labelDetails:"6. Dettagli e qualità",
+          labelCamera:"7. Setup della camera",labelRatio:"8. Formato (Aspect Ratio)",optChoose:"-- scegli --",optOther:"Altro...",optCustom:"Personalizzato…",
+          phStyleOther:"Stile personalizzato…",phPerspectiveOther:"Prospettiva personalizzata…",phLightingOther:"Illuminazione personalizzata…",phDetailsOther:"Dettagli personalizzati…",phCameraOther:"Setup personalizzato…",phRatioCustom:"es. 21:9",
+          labelPretty:"Formatta come frase",resultTitle:"Prompt finale",historyTitle:"Cronologia",historyClear:"Cancella tutto",
+          copyOk:"Copiato!",copyBtn:"Copia",exportOk:"Esportato",exportBtn:"Esporta come testo",exportJsonBtn:"Esporta come JSON",exportMdBtn:"Esporta come Markdown",jsonOk:"JSON creato",mdOk:"Markdown creato",genBtn:"Genera prompt",themeLight:"Chiaro",themeDark:"Scuro",
+          examplesSetting:["su Marte","in una foresta incantata","su una spiaggia tropicale"]},
+      ro:{subtitle:"Drumul simplu către promptul perfect pentru imagini IA",labelSubject:"1. Subiect principal (Ce?)",
+          phSubject:"de ex.: Un astronaut, o floare, o casă veche…",
+          labelAction:"1a. Mișcare / Acțiune (Cum?)", phAction:"de ex.: aleargă, cade, se sparge…",
+          hintSubject:"Introduceți un subiect principal.",labelSetting:"2. Locație / Fundal (Unde?)",phSetting:"Descrieți scena…",
+          labelStyle:"3. Stil artistic",labelPerspective:"4. Perspectivă cameră",labelLighting:"5. Iluminare",labelDetails:"6. Detalii & Calitate",
+          labelCamera:"7. Setare cameră",labelRatio:"8. Raport de aspect",optChoose:"-- alegeți --",optOther:"Altul...",optCustom:"Personalizat…",
+          phStyleOther:"Stil personalizat…",phPerspectiveOther:"Perspectivă personalizată…",phLightingOther:"Iluminare personalizată…",phDetailsOther:"Detalii personalizate…",phCameraOther:"Setare personalizată…",phRatioCustom:"ex. 21:9",
+          labelPretty:"Formatați ca o propoziție",resultTitle:"Promptul final",historyTitle:"Istoric",historyClear:"Șterge tot",
+          copyOk:"Copiat!",copyBtn:"Copiază",exportOk:"Exportat",exportBtn:"Exportă ca text",exportJsonBtn:"Exportă ca JSON",exportMdBtn:"Exportă ca Markdown",jsonOk:"JSON exportat",mdOk:"Markdown exportat",genBtn:"Generează prompt",themeLight:"Luminos",themeDark:"Întunecat",
+          examplesSetting:["pe Marte","într-o pădure fermecată","pe o plajă tropicală"]}
+    };
+
+    /* ========================= OPTION LABELS (unverändert) ========================= */
+    const OPTION_LABELS = {
+      style: {
+        keys: ['photorealistic','oil_painting','watercolor','render_3d','anime','cyberpunk','steampunk','vintage_photo','pencil_drawing','other'],
+        de: ['Fotorealistisch','Ölgemälde','Aquarell','3D Render','Anime-Stil','Cyberpunk','Steampunk','Vintage Foto','Bleistiftzeichnung','Andere...'],
+        en: ['Photorealistic','Oil painting','Watercolor','3D render','Anime style','Cyberpunk','Steampunk','Vintage photo','Pencil drawing','Other...'],
+        fr: ['Photoréaliste','Peinture à l’huile','Aquarelle','Rendu 3D','Style anime','Cyberpunk','Steampunk','Photo vintage','Dessin au crayon','Autre...'],
+        es: ['Fotorrealista','Óleo','Acuarela','Render 3D','Estilo anime','Cyberpunk','Steampunk','Foto vintage','Dibujo a lápiz','Otro...'],
+        it: ['Fotorealistico','Olio su tela','Acquerello','Render 3D','Stile anime','Cyberpunk','Steampunk','Foto vintage','Disegno a matita','Altro...'],
+        ro: ['Fotorealist','Pictură în ulei','Acuarelă','Randare 3D','Stil anime','Cyberpunk','Steampunk','Fotografie vintage','Desen în creion','Altul...']
+      },
+      perspective: {
+        keys: ['eye_level','low_angle','high_angle','birds_eye','close_up','extreme_close_up','long_shot','dutch_angle','pov','other'],
+        de: ['Eye-Level Shot (Augenhöhe)','Low-Angle Shot (Froschperspektive)','High-Angle Shot (Vogelperspektive)','Bird’s-Eye View (Aufsicht)','Close-up Shot (Nahaufnahme)','Extreme Close-up (Detailaufnahme)','Long Shot (Totale)','Dutch Angle (Gekippte Perspektive)','Point of view (POV)','Andere...'],
+        en: ['Eye-level shot','Low-angle shot','High-angle shot','Bird’s-eye view','Close-up shot','Extreme close-up','Long shot','Dutch angle','Point of view (POV)','Other...'],
+        fr: ['Plan à hauteur des yeux','Contre-plongée','Plongée','Vue en plongée verticale','Gros plan','Très gros plan','Plan large','Angle incliné','Point de vue (POV)','Autre...'],
+        es: ['Plano a la altura de los ojos','Picado bajo','Picado alto','Vista de pájaro','Primer plano','Primerísimo primer plano','Plano general','Ángulo holandés','Punto de vista (POV)','Otro...'],
+        it: ['Inquadratura a livello occhi','Sottoinquadratura','Sovrainquadratura','Vista dall’alto','Primo piano','Primissimo piano','Campo lungo','Angolazione olandese','Punto di vista (POV)','Altro...'],
+        ro: ['La nivelul ochilor','Unghi de jos','Unghi de sus','Vedere de sus','Prim-plan','Prim-plan extrem','Plan general','Unghi olandez','Punct de vedere (POV)','Altul...']
+      },
+      lighting: {
+        keys: ['cinematic','soft','dramatic','sunset','golden_hour','neon','studio','backlight','other'],
+        de: ['Filmische Beleuchtung','Sanftes Licht','Dramatisches Licht','Sonnenuntergang','Goldene Stunde','Neonlicht','Studiobeleuchtung','Gegenlicht','Andere...'],
+        en: ['Cinematic lighting','Soft light','Dramatic light','Sunset','Golden hour','Neon light','Studio lighting','Backlight','Other...'],
+        fr: ['Éclairage cinématographique','Lumière douce','Lumière dramatique','Coucher de soleil','Heure dorée','Néon','Éclairage studio','Contre-jour','Autre...'],
+        es: ['Iluminación cinematográfica','Luz suave','Luz dramática','Atardecer','Hora dorada','Luz de neón','Iluminación de estudio','Contraluz','Otro...'],
+        it: ['Illuminazione cinematografica','Luce morbida','Luce drammatica','Tramonto','Golden hour','Luce al neon','Illuminazione da studio','Controluce','Altro...'],
+        ro: ['Iluminare cinematică','Lumină moale','Lumină dramatică','Apus','Ora de aur','Lumină neon','Iluminare de studio','Contralumină','Altul...']
+      },
+      details: {
+        keys: ['high_detail','ultra_realistic','8k','4k','sharp_focus','cinematic','other'],
+        de: ['Hochdetailliert','Ultra-realistisch','8K','4K','Scharfer Fokus','Kinematisch','Andere...'],
+        en: ['High detail','Ultra realistic','8K','4K','Sharp focus','Cinematic','Other...'],
+        fr: ['Très détaillé','Ultra réaliste','8K','4K','Mise au point nette','Cinématique','Autre...'],
+        es: ['Alto detalle','Ultra realista','8K','4K','Foco nítido','Cinemático','Otro...'],
+        it: ['Altamente dettagliato','Ultra realistico','8K','4K','Fuoco nitido','Cinematico','Altro...'],
+        ro: ['Detaliu ridicat','Ultra realist','8K','4K','Focalizare clară','Cinematic','Altul...']
+      },
+      camera: {
+        keys: ['dslr','telephoto','wide_angle','macro','gopro','polaroid','kodak_portra','other'],
+        de: ['DSLR Kamera','Teleobjektiv','Weitwinkelobjektiv','Makroobjektiv','GoPro-Look','Polaroid-Foto','Kodak Portra Film-Look','Andere...'],
+        en: ['DSLR camera','Telephoto lens','Wide-angle lens','Macro lens','GoPro look','Polaroid photo','Kodak Portra film look','Other...'],
+        fr: ['Appareil DSLR','Téléobjectif','Grand-angle','Objectif macro','Style GoPro','Photo Polaroid','Style film Kodak Portra','Autre...'],
+        es: ['Cámara DSLR','Teleobjetivo','Gran angular','Lente macro','Estilo GoPro','Foto Polaroid','Estilo Kodak Portra','Otro...'],
+        it: ['Fotocamera DSLR','Teleobiettivo','Grandangolo','Obiettivo macro','Stile GoPro','Foto Polaroid','Stile Kodak Portra','Altro...'],
+        ro: ['Cameră DSLR','Teleobiectiv','Obiectiv wide','Obiectiv macro','Aspect GoPro','Fotografie Polaroid','Aspect film Kodak Portra','Altul...']
+      },
+      ratio: {
+        keys: ['choose','16:9','1:1','9:16','4:3','custom'],
+        de: ['-- wählen --','16:9','1:1','9:16','4:3','Eigene…'],
+        en: ['-- choose --','16:9','1:1','9:16','4:3','Custom…'],
+        fr: ['-- choisir --','16:9','1:1','9:16','4:3','Personnalisé…'],
+        es: ['-- elegir --','16:9','1:1','9:16','4:3','Personalizado…'],
+        it: ['-- scegli --','16:9','1:1','9:16','4:3','Personalizzato…'],
+        ro: ['-- alegeți --','16:9','1:1','9:16','4:3','Personalizat…']
+      }
+    };
+
+    /* ===== Helpers: Build select options & examples ===== */
+    function populateSelect(selectEl, category, lang) {
+      const labels = OPTION_LABELS[category];
+      const keys = labels.keys;
+      const texts = labels[lang] || labels.de;
+
+      const prev = selectEl.value || '';
+      selectEl.innerHTML = '';
+
+      keys.forEach((key, idx) => {
+        const opt = document.createElement('option');
+        opt.value = (category === 'ratio' && idx === 0) ? '' : key;
+        opt.textContent = texts[idx];
+        selectEl.appendChild(opt);
+      });
+
+      if ([...selectEl.options].some(o => o.value === prev)) selectEl.value = prev;
+      else selectEl.value = (category === 'ratio') ? '' : '';
+    }
+
+    function renderSettingChips(lang){
+      const t = I18N[lang] || I18N.de;
+      const wrapSet  = document.getElementById('setting-examples');
+      wrapSet.innerHTML = '';
+      (t.examplesSetting || []).forEach(txt=>{
+        const span = document.createElement('span');
+        span.className = 'chip example-tag bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600';
+        span.textContent = txt; wrapSet.appendChild(span);
+      });
+    }
+
+    function getOptionLabel(category, key, lang) {
+      const labels = OPTION_LABELS[category];
+      if (!labels) return '';
+      const idx = labels.keys.indexOf(key);
+      if (idx === -1) return '';
+      return (labels[lang] || labels.de)[idx];
+    }
+
+    /* ===== Theme ===== */
+    function setTheme(mode){
+      const root=document.documentElement;
+      mode==='dark' ? root.classList.add('dark') : root.classList.remove('dark');
+      localStorage.setItem('theme',mode);
+      const lang = localStorage.getItem('lang') || 'de';
+      document.getElementById('theme-label').textContent = (I18N[lang]||I18N.de)[ root.classList.contains('dark') ? 'themeDark' : 'themeLight' ];
+    }
+    function toggleTheme(){ const dark=document.documentElement.classList.contains('dark'); setTheme(dark?'light':'dark'); }
+
+    /* ===== UI helpers ===== */
+    function setupOtherField(selectId, otherId){
+      const select=document.getElementById(selectId), other=document.getElementById(otherId);
+      select.addEventListener('change', ()=>{
+        if(select.value==='other' || select.value==='custom'){ other.classList.remove('hidden'); other.focus(); }
+        else { other.classList.add('hidden'); other.value=''; }
+      });
+    }
+    function setupExampleClick(containerId, inputId){
+      const c=document.getElementById(containerId), i=document.getElementById(inputId);
+      c.addEventListener('click', e=>{
+        const el=e.target; if(el.classList && el.classList.contains('example-tag')){
+          i.value = el.textContent.trim(); i.dispatchEvent(new Event('input'));
+        }
+      });
+    }
+
+    const getTextValue = id => (document.getElementById(id)?.value||'').trim();
+    function getSelectTextValue(baseId, category, lang){
+      const select = document.getElementById(`${baseId}-select`);
+      if (!select) return '';
+      const key = select.value;
+      if (key === 'other' || key === 'custom') {
+        return (document.getElementById(`${baseId}-other`)?.value || document.getElementById(`${baseId}-custom`)?.value || '').trim();
+      }
+      if (category === 'ratio' && key === '') return '';
+      return getOptionLabel(category, key, lang) || '';
+    }
+
+    /* ===== Prompt-Building ===== */
+    function buildPrettySentence(v){
+      // Subjekt + Aktion + Setting in einem Block (vermeidet Komma vor Verb)
+      let main = v.subject || '';
+      if (v.action)  main += (main ? ' ' : '') + v.action;
+      if (v.setting) main += (main ? ' ' : '') + v.setting;
+
+      const parts=[];
+      if (main) parts.push(main);
+      if(v.style) parts.push(`im Stil von ${v.style}`);
+      if(v.perspective) parts.push(`aus der Perspektive „${v.perspective}“`);
+      if(v.lighting) parts.push(`mit ${v.lighting.toLowerCase()}`);
+      if(v.details) parts.push(v.details.toLowerCase());
+      if(v.camera) parts.push(`aufgenommen mit ${v.camera}`);
+      if(v.ratio) parts.push(`Seitenverhältnis ${v.ratio}`);
+      let s=parts.filter(Boolean).join(', '); s=s.charAt(0).toUpperCase()+s.slice(1); if(!/[.!?]$/.test(s)) s+='.'; return s;
+    }
+    const buildFlatList = v => [v.subject,v.action,v.setting,v.style,v.perspective,v.lighting,v.details,v.camera,v.ratio].filter(Boolean).join(', ');
+
+    /* ===== History ===== */
+    const HISTORY_KEY='prompt_history_v1';
+    const loadHistory=()=>{ try{return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');}catch{return[];} };
+    const saveHistory=list=>localStorage.setItem(HISTORY_KEY,JSON.stringify(list));
+    const addHistory=e=>{ const l=loadHistory(); l.unshift(e); saveHistory(l); renderHistory(); };
+    const deleteHistory=id=>{ saveHistory(loadHistory().filter(it=>it.id!==id)); renderHistory(); };
+    const clearHistory=()=>{ localStorage.removeItem(HISTORY_KEY); renderHistory(); };
+
+    function renderHistory(){
+      const list=loadHistory(); const wrap=document.getElementById('history-list'); wrap.innerHTML='';
+      if(!list.length){ const p=document.createElement('p'); p.className='text-sm text-gray-500 dark:text-gray-400'; p.textContent='–'; wrap.appendChild(p); return; }
+      list.forEach(item=>{
+        const card=document.createElement('div'); card.className='border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-white dark:bg-gray-700';
+        const row=document.createElement('div'); row.className='flex items-start justify-between gap-3';
+        const text=document.createElement('p'); text.className='text-sm text-gray-800 dark:text-gray-100 line-clamp-3'; text.textContent=item.output;
+        const btns=document.createElement('div'); btns.className='flex items-center gap-2 shrink-0';
+
+        const regBtn=document.createElement('button'); regBtn.className='p-2 rounded bg-cyan-600 hover:bg-cyan-700 text-white'; regBtn.title='Neu generieren';
+        regBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6V2L7 7l5 5V8a4 4 0 1 1-4 4H6a6 6 0 1 0 6-6z"/></svg>';
+        regBtn.addEventListener('click', ()=>{ setFormValues(item.values); document.getElementById('pretty-toggle').checked=!!item.pretty; generate(); });
+
+        const delBtn=document.createElement('button'); delBtn.className='p-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-900 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white'; delBtn.title='Löschen';
+        delBtn.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M9 3h6a1 1 0 0 1 1 1v1h4v2H4V5h4V4a1 1 0 0 1 1-1zm1 7h2v8h-2v-8zm4 0h2v8h-2v-8zm-8 0h2v8H6v-8z"/></svg>';
+        delBtn.addEventListener('click', ()=>deleteHistory(item.id));
+
+        btns.appendChild(regBtn); btns.appendChild(delBtn); row.appendChild(text); row.appendChild(btns); card.appendChild(row);
+        const meta=document.createElement('p'); meta.className='mt-2 text-xs text-gray-500 dark:text-gray-300'; meta.textContent=new Date(item.time).toLocaleString(); card.appendChild(meta);
+        wrap.appendChild(card);
+      });
+    }
+
+    function setSelectOrOther(baseId,value){
+      const select = document.getElementById(`${baseId}-select`);
+      const other  = document.getElementById(`${baseId}-other`) || document.getElementById(`${baseId}-custom`);
+      if(!select) return;
+
+      const isRatio = baseId==='ratio';
+      const keys = isRatio ? OPTION_LABELS.ratio.keys : OPTION_LABELS[baseId].keys;
+
+      if(!value){ select.value = isRatio ? '' : ''; if(other){other.classList.add('hidden'); other.value='';} return; }
+      if(keys.includes(value)){
+        select.value = value; if(other){other.classList.add('hidden'); other.value='';}
+      } else {
+        if(isRatio){ select.value='custom'; if(other){other.classList.remove('hidden'); other.value=value;} }
+        else { select.value='other'; if(other){other.classList.remove('hidden'); other.value=value;} }
+      }
+    }
+
+    function setFormValues(v){
+      document.getElementById('subject').value=v.subject||'';
+      document.getElementById('action').value=v.action||'';
+      document.getElementById('setting').value=v.setting||'';
+      setSelectOrOther('style', v.style);
+      setSelectOrOther('perspective', v.perspective);
+      setSelectOrOther('lighting', v.lighting);
+      setSelectOrOther('details', v.details);
+      setSelectOrOther('camera', v.camera);
+      setSelectOrOther('ratio', v.ratio);
+    }
+
+    /* ===== Generate / Export / Copy ===== */
+    function collectValues(){
+      const lang = localStorage.getItem('lang')||'de';
+      return {
+        subject:getTextValue('subject'),
+        action:getTextValue('action'),
+        setting:getTextValue('setting'),
+        style:getSelectTextValue('style','style',lang),
+        perspective:getSelectTextValue('perspective','perspective',lang),
+        lighting:getSelectTextValue('lighting','lighting',lang),
+        details:getSelectTextValue('details','details',lang),
+        camera:getSelectTextValue('camera','camera',lang),
+        ratio:(()=>{
+          const sel=document.getElementById('ratio-select');
+          if(sel.value==='custom') return (document.getElementById('ratio-custom').value||'').trim();
+          if(sel.value==='') return '';
+          return getOptionLabel('ratio', sel.value, lang) || sel.value;
+        })()
+      };
+    }
+
+    function generate(){
+      const v=collectValues(); const pretty=document.getElementById('pretty-toggle').checked;
+      if(!v.subject){
+        const hint=document.getElementById('subject-hint'); const input=document.getElementById('subject');
+        hint.classList.remove('hidden'); input.classList.add('ring-2','ring-red-500');
+        setTimeout(()=>input.classList.remove('ring-2','ring-red-500'), 800); input.focus(); return;
+      }
+      document.getElementById('subject-hint').classList.add('hidden');
+      const output = pretty ? buildPrettySentence(v) : buildFlatList(v);
+      document.getElementById('result-prompt').value=output;
+      document.getElementById('result-section').classList.remove('hidden');
+      document.getElementById('result-section').scrollIntoView({behavior:'smooth'});
+      addHistory({ id:'id_'+Date.now()+'_'+Math.random().toString(36).slice(2,7), time:Date.now(), values:v, pretty, output });
+    }
+
+    function downloadFile(content, name, type){
+      const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }
+    async function copyResult(){
+      const lang=localStorage.getItem('lang')||'de'; const t=I18N[lang]||I18N.de;
+      const ta=document.getElementById('result-prompt'); if(!ta.value) return;
+      try{ if(navigator.clipboard?.writeText) await navigator.clipboard.writeText(ta.value); else { ta.select(); document.execCommand('copy'); window.getSelection().removeAllRanges(); } }
+      catch(e){}
+      const btn=document.getElementById('copy-btn'); btn.textContent=t.copyOk; setTimeout(()=>btn.textContent=t.copyBtn, 1500);
+    }
+    function exportText(){
+      const lang=localStorage.getItem('lang')||'de'; const t=I18N[lang]||I18N.de;
+      const txt=document.getElementById('result-prompt').value.trim(); if(!txt) return;
+      const stamp=new Date().toISOString().replace(/[:.]/g,'-'); downloadFile(txt,`prompt-${stamp}.txt`,'text/plain;charset=utf-8');
+      const btn=document.getElementById('export-btn'); btn.textContent=t.exportOk; setTimeout(()=>btn.textContent=t.exportBtn,1500);
+    }
+    function exportJSON(){
+      const lang=localStorage.getItem('lang')||'de'; const t=I18N[lang]||I18N.de;
+      const values=collectValues(); const output=document.getElementById('result-prompt').value.trim(); if(!output) return;
+      const payload={ generatedAt:new Date().toISOString(), pretty:document.getElementById('pretty-toggle').checked, values, output };
+      const stamp=new Date().toISOString().replace(/[:.]/g,'-'); downloadFile(JSON.stringify(payload,null,2),`prompt-${stamp}.json`,'application/json');
+      const btn=document.getElementById('export-json-btn'); btn.textContent=t.jsonOk; setTimeout(()=>btn.textContent=t.exportJsonBtn,1500);
+    }
+    function exportMarkdown(){
+      const lang=localStorage.getItem('lang')||'de'; const t=I18N[lang]||I18N.de;
+      const v=collectValues(); const output=document.getElementById('result-prompt').value.trim(); if(!output) return;
+      const md =
+`# Prompt
+${output}
+
+## Felder
+- **Hauptmotiv:** ${v.subject||'-'}
+- **Aktion:** ${v.action||'-'}
+- **Ort/Hintergrund:** ${v.setting||'-'}
+- **Kunststil:** ${v.style||'-'}
+- **Perspektive:** ${v.perspective||'-'}
+- **Beleuchtung:** ${v.lighting||'-'}
+- **Details:** ${v.details||'-'}
+- **Kamera-Setup:** ${v.camera||'-'}
+- **Seitenverhältnis:** ${v.ratio||'-'}
+
+_Generiert: ${new Date().toLocaleString()}_`;
+      const stamp=new Date().toISOString().replace(/[:.]/g,'-'); downloadFile(md,`prompt-${stamp}.md`,'text/markdown;charset=utf-8');
+      const btn=document.getElementById('export-md-btn'); btn.textContent=t.mdOk; setTimeout(()=>btn.textContent=t.exportMdBtn,1500);
+    }
+
+    /* ===== applyI18n ===== */
+    function applyI18n(lang){
+      const t = I18N[lang] || I18N.de;
+      document.documentElement.setAttribute('lang', lang);
+
+      document.getElementById('subtitle').textContent = t.subtitle;
+      document.querySelectorAll('[data-i18n]').forEach(el => { const k=el.getAttribute('data-i18n'); if (t[k]) el.textContent=t[k]; });
+      document.querySelectorAll('[data-i18n-ph]').forEach(el => { const k=el.getAttribute('data-i18n-ph'); if (t[k]) el.setAttribute('placeholder', t[k]); });
+
+      const isDark = document.documentElement.classList.contains('dark');
+      document.getElementById('theme-label').textContent = isDark ? t.themeDark : t.themeLight;
+
+      // Dropdowns neu aufbauen
+      populateSelect(document.getElementById('style-select'), 'style', lang);
+      populateSelect(document.getElementById('perspective-select'), 'perspective', lang);
+      populateSelect(document.getElementById('lighting-select'), 'lighting', lang);
+      populateSelect(document.getElementById('details-select'), 'details', lang);
+      populateSelect(document.getElementById('camera-select'), 'camera', lang);
+      populateSelect(document.getElementById('ratio-select'), 'ratio', lang);
+
+      // Setting-Chips rendern
+      renderSettingChips(lang);
+
+      // "other/custom" Inputs Sichtbarkeit prüfen
+      ['style','perspective','lighting','details','camera','ratio'].forEach(id=>{
+        const sel=document.getElementById(`${id}-select`);
+        const other=document.getElementById(`${id}-other`) || document.getElementById(`${id}-custom`);
+        if(!sel || !other) return;
+        if(sel.value==='other' || sel.value==='custom'){ other.classList.remove('hidden'); }
+        else { other.classList.add('hidden'); }
+      });
+    }
+
+    /* ===== Init ===== */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      setTheme(localStorage.getItem('theme')||'dark');
+      const savedLang=localStorage.getItem('lang')||'de';
+      document.getElementById('lang-select').value=savedLang;
+
+      applyI18n(savedLang);
+
+      document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+      document.getElementById('lang-select').addEventListener('change', (e)=>{
+        const lang=e.target.value;
+        localStorage.setItem('lang',lang);
+        applyI18n(lang);
+      });
+
+      setupOtherField('style-select','style-other');
+      setupOtherField('perspective-select','perspective-other');
+      setupOtherField('lighting-select','lighting-other');
+      setupOtherField('details-select','details-other');
+      setupOtherField('camera-select','camera-other');
+
+      const rs=document.getElementById('ratio-select'), ro=document.getElementById('ratio-custom');
+      rs.addEventListener('change', ()=>{ if(rs.value==='custom'){ ro.classList.remove('hidden'); ro.focus(); } else { ro.classList.add('hidden'); ro.value=''; } });
+
+      setupExampleClick('setting-examples','setting');
+
+      document.getElementById('generate-btn').addEventListener('click', generate);
+      document.getElementById('copy-btn').addEventListener('click', copyResult);
+      document.getElementById('export-btn').addEventListener('click', exportText);
+      document.getElementById('export-json-btn').addEventListener('click', exportJSON);
+      document.getElementById('export-md-btn').addEventListener('click', exportMarkdown);
+      document.getElementById('clear-history').addEventListener('click', clearHistory);
+
+      renderHistory();
+    });
+  </script>
+</body>
+</html>
